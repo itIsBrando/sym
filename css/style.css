@@ -1,0 +1,73 @@
+:root {
+    --ui-background: #202730;
+    --ui-background-highlight: #444;
+    --ui-text-color: aliceblue;
+    --ui-schematic-background: tan;
+}
+
+html, body {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.symbol-details {
+    position: absolute;
+    width: 100%;
+    height: 40vh;
+    padding: 2em;
+    bottom: 0;
+    box-sizing: border-box;
+    background: var(--ui-background);
+    border-radius: 5px;
+    box-shadow: 5px 5px 5px black;
+    color: var(--ui-text-color);
+}
+
+.shadow {
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+}
+
+.popup {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    max-height: 80vh;
+    min-width: 350px;
+    width: fit-content;
+    padding: 5px;
+    background-color: var(--ui-background);
+    color: var(--ui-text-color);
+    border-radius: 5px;
+    overflow: hidden;
+    z-index: 2;
+    display: none;
+
+}
+
+.popup-header {
+    padding: 5px 0px 5px 5px;
+    font-size: 1.25rem;
+}
+
+.catalog-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.button {
+    background: var(--ui-background-highlight);
+    border: 1px var(--ui-text-color) solid;
+    border-top: none;
+    color: var(--ui-text-color);
+    text-align: left;
+    padding: 0.5rem;
+    width: 100%;
+}
+
+.button:hover {
+    opacity: 0.8;
+}
