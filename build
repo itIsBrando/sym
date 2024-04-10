@@ -1,2 +1,0 @@
-cd typescript
-tsc -t ES2016 --lib "ES2016","DOM" *.ts --outdir ../javascript

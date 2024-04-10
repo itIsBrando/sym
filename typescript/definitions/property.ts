@@ -13,8 +13,4 @@ class dProperty extends Definition {
         this.effects = new dEffects(tok.key('effects'));
 
     }
-
-    graphic(): string {
-        return this.effects.text(this.value, this.position.x, this.position.y);
-    }
 }

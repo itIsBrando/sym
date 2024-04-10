@@ -1,7 +1,7 @@
 
 class dStroke {
-    width: number = 12;
-    type: string; // @todo
+    width: number = 0.1;
+    type: string;
     dash: string;
     color: Color;
 
@@ -19,9 +19,19 @@ class dStroke {
     }
 
     constructor(tok: Tok) {
-        this.width = Math.max(tok.key('width')!.params[0].asNum(), 0.1);
+        const w = tok.key('width')!.params[0].asNum();
+        this.width = w == 0 ? 0.1 : w;
         this.type = tok.key('type')!.params[0].asStr();
         this.color = Color.tStroke;
         this.dash = this.strokeType();
+    }
+
+    /**
+     * Generates needed information that should be embedded inside an svg elem
+     */
+    stroke() {
+        return `stroke="${this.color.html}" stroke-opacity="${this.color.a / 255}"
+        stroke-width="${this.width}" dasharray="${this.dash}"
+        `;
     }
 }

@@ -17,8 +17,7 @@ class dPolyline extends Definition {
             points += `${this.points[i].x} ${this.points[i].y} `;
         }
 
-        return `<polyline fill="${this.fill.color.html}" stroke="${this.stroke.color.html}"
-        stroke-width="${this.stroke.width}" dasharray="${this.stroke.dash}"
+        return `<polyline ${this.fill.fill()} ${this.stroke.stroke()}
         stroke-linejoin="round" stroke-linecap="round"
         points="${points}"></polyline>`;
     }

@@ -36,7 +36,7 @@ class Token {
         let ei = s.indexOf(" ");
 
         if(!s.startsWith('(') || !s.endsWith(")") || ei == -1) {
-            console.error('Malformed input');
+            throw new Error(`Malformed input: ${s}`);
         }
 
         this.id = s.slice(1, ei);
@@ -52,7 +52,7 @@ class Token {
         let inStr = false, inTok = false;
         let buf = "";
 
-        str = str.trim().replace(/\n/g, "");
+        str = str.trim().replace(/\n/g, " ");
         tok.setID(str);
         let toksStr = str.slice(1 + tok.id.length, str.length - 1).trim();
 

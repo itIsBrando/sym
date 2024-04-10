@@ -8,25 +8,32 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 class Library extends Definition {
-    constructor(tok) {
+    constructor(tok, name) {
         super(tok);
         this.version = tok.key('version').params[0].asNum();
         this.generator = tok.key('generator').params[0].asStr();
-        this.name = 'lib';
+        this.name = name;
         this.symbols = [];
         for (let i = 2; i < tok.params.length; i++) {
             this.symbols.push(new dSymbol(tok.params[i].asTok()));
         }
-        Library.libs.push(this);
+        Library.libs[name] = this;
     }
     toString() {
         return `[Library]: ${this.name} v${this.version} with ${this.symbols.length} symbols`;
     }
+    /**
+     * Adds a file from the project's top directory to the library manager
+     * @note this function may take awhile
+     */
+    static add(name) {
+        fetch(`../${name}.kicad_sym`).then((resp) => __awaiter(this, void 0, void 0, function* () {
+            let txt = yield resp.text();
+            let lib = Token.parseFile(txt);
+            console.log('' + new Library(lib, name));
+        }));
+    }
 }
-Library.libs = [];
-fetch('../Device.kicad_sym').then((resp) => __awaiter(this, void 0, void 0, function* () {
-    let txt = yield resp.text();
-    console.log(txt);
-    let lib = Token.parseFile(txt);
-    console.log('' + new Library(lib));
-}));
+Library.libs = {};
+Library.add('4xxx');
+Library.add('Device');

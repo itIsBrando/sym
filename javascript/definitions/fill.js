@@ -13,4 +13,8 @@ class dFill extends Definition {
                 return Color.clear;
         }
     }
+    fill() {
+        const c = this.color;
+        return `fill="${c}" fill-opacity=${c.a / 255}`;
+    }
 }

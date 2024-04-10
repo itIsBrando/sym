@@ -24,7 +24,7 @@ class dPin extends Definition {
         const num = this.parent.pin_num_hidden ? '' : '@TODO';
         return `
             <polyline stroke="${Color.tPin}" points="${xStart} ${yStart} ${xEnd} ${yEnd}"
-            stroke-width="0.32" stroke-linejoin="round" stroke-linecap="round">
+            stroke-width="0.15" stroke-linejoin="round" stroke-linecap="round">
             </polyline>
             ${name}
             ${num}

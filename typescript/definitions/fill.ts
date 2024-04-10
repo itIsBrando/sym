@@ -16,4 +16,10 @@ class dFill extends Definition {
         super(tok);
         this.type = tok.key('type')!.params[0].asStr();
     }
+
+
+    fill(): string {
+        const c = this.color;
+        return `fill="${c}" fill-opacity=${c.a / 255}`;
+    }
 }

@@ -9,29 +9,45 @@
         <div id="circuitWrapper" style="user-select: none; width: 100%; height: 100%;">
             <svg id="canvas" style="background-color: var(--ui-schematic-background);" width="100%" height="100%"
                 viewBox="0 0 70 70">
-
             </svg>
         </div>
         <div id="SymbolDetails" class="symbol-details">
 
         </div>
 
-        <div id="SymbolCatalog" class="shadow popup">
+        <div id="SymbolCatalog" class="shadow popup" style="width: 100%;">
             <div class="popup-header">
                 Symbol Catalog
+                <button type="button" class="btn-x" onclick="CatalogList.hide();"></button>
             </div>
-            <div style="overflow: auto; height: 60vh;">
-                <div id="CatalogList" class="catalog-list">
+            <div class="catalog-wrapper">
+                <select style="grid-column: 1 / 3;" id="CatalogLibrarySelect"> </select>
+                <div style="overflow: hidden auto; height: 60vh;">
+                    <div id="CatalogList" class="catalog-list">
+                    </div>
                 </div>
+                <div id="CatalogDetail"></div>
             </div>
+        </div>
+
+        <div class="toolbar">
+            <button type="button" class="btn-default" onclick="CatalogList.show();">place</button>
+            <button type="button" class="btn-default">wire</button>
+            <button type="button" class="btn-default">connector</button>
+            <button type="button" class="btn-default">delete</button>
         </div>
 
         <script src="javascript/ui/symbolDetail.js"></script>
         <script src="javascript/ui/catalog.js"></script>
         <script src="javascript/definition.js"></script>
         <script src="javascript/library.js"></script>
+        <script src="javascript/editor/editor.js"></script>
+        <script src="javascript/definitions/symbol.js"></script>
         <script src="javascript/definitions/fill.js"></script>
+        <script src="javascript/definitions/effects.js"></script>
         <script src="javascript/definitions/stroke.js"></script>
+        <script src="javascript/definitions/text.js"></script>
+        <script src="javascript/definitions/rect.js"></script>
         <script src="javascript/definitions/arc.js"></script>
         <script src="javascript/definitions/circle.js"></script>
         <script src="javascript/definitions/pin.js"></script>
@@ -42,35 +58,39 @@
         <script>
             var canvas = document.getElementById('canvas');
 
-            function place(sym) {
-                let svg = sym.export();
-                svg.setAttribute('transform', `translate(35, 35)`);
-                canvas.appendChild(svg);
-
-                let boundingBox = svg.getBBox({stroke: true, markers: true, clipped: true});
-                let x = Math.floor(boundingBox.x), y = Math.floor(boundingBox.y);
-                let w = Math.ceil(boundingBox.width), h = Math.ceil(boundingBox.height);
-                svg.setAttribute('width', `${w - x}`);
-                svg.setAttribute('height', `${h - y}`);
-                svg.setAttribute('viewBox', `${x} ${y} ${w} ${h}`);
-            }
+            canvas.addEventListener('wheel', (event) => {
+                if(event.deltaY > 0) {
+                    Editor.zoomIn();
+                } else {
+                    Editor.zoomOut();
+                }
+            });
 
 
             var state = 'none';
 
             function onMouseDown(e) {
-                console.log(e.target, e.target.parentElement);
+                // console.log(e.target, e.target.parentElement);
                 const target = e.target;
                 const startx = parseInt((target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[0].slice(10));
                 const starty = parseInt((target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[1].slice(0, -1));
-                const mx = e.clientX;
-                const my = e.clientY;
+                let mx = e.clientX;
+                let my = e.clientY;
 
-                state = 'down';
+                if(e.target == canvas) {
+                    state = 'pan';
+                } else {
+                    state = 'down';
+                }
 
                 function onMouseMove(e) {
-                    target.parentElement.setAttribute('transform', `translate(${startx + e.clientX - mx}, ${starty + e.clientY - my})`);
-                    state = 'move';
+                    if(state == 'pan') {
+                        Editor.pan(mx - e.clientX, my - e.clientY);
+                        mx = e.clientX, my = e.clientY;
+                    } else {
+                        target.parentElement.setAttribute('transform', `translate(${startx + e.clientX - mx}, ${starty +  e.clientY - my})`);
+                        state = 'move';
+                    }
                 }
 
                 function onMouseUp(e) {
@@ -80,7 +100,11 @@
 
                     if(state == 'down') {
                         console.log('pressed');
-                        symbolDetails.show(tDef);
+                        const sym = Editor.searchSym(target.parentElement.id);
+                        if(sym)
+                            symbolDetails.show(sym);
+                        else
+                            console.log(`[Editor]: Symbol Not Found: ${target.parentElement.id}!!`);
                     } else if(state == 'move') {
                         console.log('move');
                     }
@@ -96,7 +120,7 @@
 
             canvas.addEventListener('mousedown', onMouseDown);
 
-            place(tDef);
+            Editor.place(tDef);
         </script>
     </body>
 

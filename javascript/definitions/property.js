@@ -6,7 +6,4 @@ class dProperty extends Definition {
         this.position = Coordinate.pos(tok.key('at'));
         this.effects = new dEffects(tok.key('effects'));
     }
-    graphic() {
-        return this.effects.text(this.value, this.position.x, this.position.y);
-    }
 }
