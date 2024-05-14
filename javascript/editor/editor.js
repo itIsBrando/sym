@@ -3,7 +3,6 @@ var InputType;
 (function (InputType) {
     InputType[InputType["Mouse"] = 0] = "Mouse";
     InputType[InputType["Pencil"] = 1] = "Pencil";
-    InputType[InputType["Touch"] = 2] = "Touch";
 })(InputType || (InputType = {}));
 ;
 var eState;
@@ -30,10 +29,14 @@ var Editor = new function () {
     this.y = 0;
     this.w = 70;
     this.h = 70;
+    this.cur_touches = [];
     this.prev_client_x = 0;
     this.prev_client_y = 0;
+    this.hasTouch = function () {
+        return 'ontouchstart' in window;
+    };
     this.init = function () {
-        this.setInputType(InputType.Mouse);
+        this.setInputType(this.hasTouch() ? InputType.Pencil : InputType.Mouse);
     };
     this.place = function (sym, unitNum = 1) {
         // Set unit number
@@ -95,9 +98,8 @@ var Editor = new function () {
     this.mMouseMove = function (e) {
         if (this.state == eState.Idle)
             return;
-        const ratiox = this.w / canvas.clientWidth, ratioy = (this.h) / canvas.clientHeight;
-        const ox = (e.clientX - this.prev_client_x) * ratiox;
-        const oy = (e.clientY - this.prev_client_y) * ratioy;
+        const ox = (e.clientX - this.prev_client_x);
+        const oy = (e.clientY - this.prev_client_y);
         switch (this.state) {
             case eState.Moving:
                 // if we are moving an element
@@ -114,10 +116,13 @@ var Editor = new function () {
         this.prev_client_x = e.clientX;
         this.prev_client_y = e.clientY;
     };
+    // why the hell does this not work on safari >:(
+    // nothing works on safari and it makes no sense. goshdang issue with transform ig
     this.moveUnit = function (target, dx, dy) {
-        const curx = parseFloat((this.target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[0].slice(10));
-        const cury = parseFloat((this.target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[1].slice(0, -1));
-        target.parentElement.setAttribute('transform', `translate(${curx + dx}, ${cury + dy})`);
+        const ratiox = this.w / canvas.clientWidth, ratioy = (this.h) / canvas.clientHeight;
+        const curx = parseFloat((target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[0].slice(10));
+        const cury = parseFloat((target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[1].slice(0, -1));
+        target.parentElement.setAttribute('transform', `translate(${curx + dx * ratiox}, ${cury + ratioy * dy})`);
     };
     this.mMouseUp = function (e) {
         const sym = Editor.searchSym(this.target.parentElement.id);
@@ -133,6 +138,79 @@ var Editor = new function () {
         }
         this.setState(eState.Idle);
     };
+    this.pTouchStart = function (e) {
+        e.preventDefault();
+        const touches = e.changedTouches;
+        for (let i = 0; i < touches.length; i++) {
+            this.cur_touches.push(touches[i]);
+            if (touches[i].touchType == 'stylus') {
+                this.state = eState.Down;
+                this.target = e.target;
+            }
+        }
+    };
+    this.pTouchMove = function (e) {
+        e.preventDefault();
+        const touches = e.changedTouches;
+        for (let i = 0; i < touches.length; i++) {
+            const t = touches[i];
+            const idx = this.pGetTouchById(t.identifier);
+            const prevT = this.cur_touches[idx];
+            if (t.touchType == 'stylus') {
+                switch (this.state) {
+                    case eState.Down:
+                        this.state = eState.Moving;
+                    case eState.Moving:
+                        this.moveUnit(this.target, 4, 4);
+                        // this.moveUnit(this.target, prevT.clientX - t.clientX, prevT.clientY - t.clientY);
+                        console.log('Hello?', this.target.parentElement);
+                        break;
+                }
+            }
+            else {
+                switch (this.state) {
+                    case eState.Idle:
+                        this.state = eState.Pan;
+                        break;
+                    case eState.Pan:
+                        this.pan(prevT.clientX - t.clientX, prevT.clientY - t.clientY);
+                        break;
+                }
+            }
+            this.cur_touches[idx] = this.pCopyTouch(t);
+            console.log(this.state, this.target);
+        }
+    };
+    this.pTouchEnd = function (e) {
+        var _a, _b;
+        e.preventDefault();
+        const touches = e.changedTouches;
+        const sym = Editor.searchSym((_b = (_a = this.target) === null || _a === void 0 ? void 0 : _a.parentElement.id) !== null && _b !== void 0 ? _b : null);
+        switch (this.state) {
+            case eState.Down:
+                if (sym)
+                    symbolDetails.show(sym);
+                else {
+                    symbolDetails.hide();
+                    console.log(`[Editor]: Symbol Not Found: ${this.target.parentElement.id}!!`);
+                }
+                break;
+        }
+        for (let i = 0; i < touches.length; i++) {
+            const idx = this.pGetTouchById(touches[i].identifier);
+            this.cur_touches.splice(idx, 1);
+        }
+        this.setState(eState.Idle);
+    };
+    this.pCopyTouch = function ({ identifier, touchType, clientX, clientY }) {
+        return { identifier, touchType, clientX, clientY };
+    };
+    this.pGetTouchById = function (id) {
+        for (let i = 0; i < this.cur_touches.length; i++)
+            if (this.cur_touches[i].identifier == id)
+                return i;
+        return -1;
+    };
     this.setState = function (s) {
         this.state = s;
     };
@@ -142,6 +220,7 @@ var Editor = new function () {
             case InputType.Mouse:
                 canvas.addEventListener('mousedown', this.mMouseDown.bind(this));
                 canvas.addEventListener('mouseup', this.mMouseUp.bind(this));
+                canvas.addEventListener('mousecancel', this.mMouseUp.bind(this));
                 canvas.addEventListener('mousemove', this.mMouseMove.bind(this));
                 canvas.addEventListener('wheel', (event) => {
                     if (event.deltaY > 0) {
@@ -151,6 +230,12 @@ var Editor = new function () {
                         Editor.zoomOut();
                     }
                 });
+                break;
+            case InputType.Pencil:
+                canvas.addEventListener('touchstart', this.pTouchStart.bind(this));
+                canvas.addEventListener('touchmove', this.pTouchMove.bind(this));
+                canvas.addEventListener('touchend', this.pTouchEnd.bind(this));
+                canvas.addEventListener('touchcancel', this.pTouchEnd.bind(this));
                 break;
         }
     };
