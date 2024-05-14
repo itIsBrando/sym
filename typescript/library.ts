@@ -31,7 +31,7 @@ class Library extends Definition {
      * @note this function may take awhile
      */
     static add(name: string) {
-        fetch(`../${name}.kicad_sym`).then(async resp => {
+        fetch(`/${name}.kicad_sym`).then(async resp => {
             let txt = await resp.text();
             let lib = Token.parseFile(txt);
             console.log('' + new Library(lib, name));

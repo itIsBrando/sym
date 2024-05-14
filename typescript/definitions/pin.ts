@@ -12,7 +12,8 @@ class dPin extends Definition {
     parent: dSymbol;
 
     /**
-     * @todo the position of the label of the pin should be
+     * @todo the position of the label of the pin should be in the opposite
+     * direction of the 'flow' of the rest of pin
      */
 
     constructor(tok: Tok, parent: dSymbol) {
