@@ -37,9 +37,7 @@ var Editor = new function () {
     };
     this.place = function (sym, unitNum = 1) {
         // Set unit number
-        console.log(unitNum);
         sym.unit(unitNum);
-        console.log(`Sym has ${sym.num_units} units`);
         let svg = sym.export();
         svg.setAttribute('transform', `translate(35, 35)`);
         canvas.appendChild(svg);

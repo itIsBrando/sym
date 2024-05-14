@@ -1,4 +1,8 @@
 class dPin extends Definition {
+    /**
+     * @todo the position of the label of the pin should be in the opposite
+     * direction of the 'flow' of the rest of pin
+     */
     constructor(tok, parent) {
         const nameObj = tok.key('name');
         const numObj = tok.key('number');

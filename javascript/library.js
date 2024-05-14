@@ -27,7 +27,7 @@ class Library extends Definition {
      * @note this function may take awhile
      */
     static add(name) {
-        fetch(`../${name}.kicad_sym`).then((resp) => __awaiter(this, void 0, void 0, function* () {
+        fetch(`/sym/${name}.kicad_sym`).then((resp) => __awaiter(this, void 0, void 0, function* () {
             let txt = yield resp.text();
             let lib = Token.parseFile(txt);
             console.log('' + new Library(lib, name));

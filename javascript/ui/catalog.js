@@ -42,7 +42,7 @@ var CatalogList = new function () {
             <br>
         `;
         // add buttons to select alternate units
-        if (sym.num_units != 0) {
+        if (sym.num_units > 1) {
             for (let i = 1; i <= sym.num_units; i++) {
                 details += `<button type="button" class="btn-catalog" onclick="CatalogList.setUnit(${i});">${String.fromCharCode(65 + i - 1)}</button>`;
             }
