@@ -3,7 +3,7 @@
     --ui-background-highlight: #444;
     --ui-text-color: aliceblue;
     --ui-accent: rgb(221, 0, 221);
-    --ui-schematic-background: tan;
+    --ui-schematic-background: rgb(244, 240, 253);
 }
 
 html, body {

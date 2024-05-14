@@ -66,17 +66,23 @@ class dSymbol extends Definition {
         return svg;
     }
     graphic() {
+        var _a, _b;
         let out = '';
         for (let i = 0; i < this.defs.length; i++) {
+            let shouldAppend = true;
             // skip over shit if we are not the selected unit
             if (this.defs[i] instanceof dSymbol) {
                 const childSym = this.defs[i];
+                const style = (_b = (_a = childSym.unit_id) === null || _a === void 0 ? void 0 : _a.style) !== null && _b !== void 0 ? _b : 1;
+                if (style != 1 && style != 0)
+                    shouldAppend = false;
                 if (childSym.unit_id.unit != 0 && this.selected_unit != childSym.unit_id.unit) {
                     console.log("SKIPPED", childSym.unit_id, this.selected_unit);
-                    continue;
+                    shouldAppend = false;
                 }
             }
-            out += this.defs[i].graphic();
+            if (shouldAppend)
+                out += this.defs[i].graphic();
         }
         return out;
     }

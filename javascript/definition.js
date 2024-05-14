@@ -1,7 +1,7 @@
 class Coordinate {
     constructor(x, y, degrees = 0) {
         this.x = x;
-        this.y = y;
+        this.y = -y;
         this.radians = degrees * Math.PI / 180;
     }
     toString() {
@@ -11,7 +11,7 @@ class Coordinate {
         return Math.cos(this.radians);
     }
     ry() {
-        return Math.sin(this.radians);
+        return -Math.sin(this.radians);
     }
     dist(b) {
         return Math.sqrt(Math.pow(this.x - b.x, 2) +

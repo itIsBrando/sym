@@ -4,6 +4,7 @@ var CatalogList = new function () {
     const CatalogLibrarySelect = document.getElementById('CatalogLibrarySelect');
     const CatalogDetail = document.getElementById('CatalogDetail');
     this.selectedLib = 'none';
+    this.unitNum = 1;
     /**
      * Draws all of the symbols in a given library onto the catalog.
      * If no library is selected, set name='none'
@@ -23,10 +24,15 @@ var CatalogList = new function () {
         }
         catalog.innerHTML = out;
     };
+    this.setUnit = function (i) {
+        this.unitNum = i;
+        console.log(this.unitNum);
+    };
     this.setDetail = function (lib_name, sym_index) {
         const sym = Library.libs[lib_name].symbols[sym_index];
         const datasheet = sym.property('Datasheet');
         const description = sym.property('Description');
+        this.setUnit(1);
         let details = `
             <b>${sym.library_id}</b>
             <br>
@@ -35,13 +41,21 @@ var CatalogList = new function () {
             Keywords: ${sym.property('ki_keywords')}
             <br>
         `;
+        // add buttons to select alternate units
+        if (sym.num_units != 0) {
+            for (let i = 1; i <= sym.num_units; i++) {
+                details += `<button type="button" class="btn-catalog" onclick="CatalogList.setUnit(${i});">${String.fromCharCode(65 + i - 1)}</button>`;
+            }
+            details += '<br>';
+        }
+        // add datasheet
         if (datasheet != '' && datasheet != '~') {
             details += `<a href="${datasheet}">Datasheet</a>`;
         }
         // @todo needs to be able to place the symbol too
         const okBtn = `<button type="button" class="btn-catalog" style="width:fit-content; right: 0px; bottom: 0px;
         position: absolute;"
-        onclick="Editor.place(Library.libs['${lib_name}'].symbols[${sym_index}]); CatalogList.hide();"
+        onclick="Editor.place(Library.libs['${lib_name}'].symbols[${sym_index}], CatalogList.unitNum); CatalogList.hide();"
         >Ok</button>`;
         details += okBtn; //.outerHTML;
         CatalogDetail.innerHTML = details;

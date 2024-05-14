@@ -20,7 +20,9 @@ class dStroke {
 
     constructor(tok: Tok) {
         const w = tok.key('width')!.params[0].asNum();
-        this.width = w == 0 ? 0.1 : w;
+        this.width = w;
+        if(this.width < 0)
+            this.width = 0; // TODO
         this.type = tok.key('type')!.params[0].asStr();
         this.color = Color.tStroke;
         this.dash = this.strokeType();

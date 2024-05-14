@@ -1,21 +1,58 @@
 var canvas = document.getElementById('canvas');
+var InputType;
+(function (InputType) {
+    InputType[InputType["Mouse"] = 0] = "Mouse";
+    InputType[InputType["Pencil"] = 1] = "Pencil";
+    InputType[InputType["Touch"] = 2] = "Touch";
+})(InputType || (InputType = {}));
+;
+var eState;
+(function (eState) {
+    eState[eState["Idle"] = 0] = "Idle";
+    eState[eState["Pan"] = 1] = "Pan";
+    eState[eState["Select"] = 2] = "Select";
+    eState[eState["Context"] = 3] = "Context";
+    eState[eState["Zoom"] = 4] = "Zoom";
+    eState[eState["Down"] = 5] = "Down";
+    eState[eState["Moving"] = 6] = "Moving";
+})(eState || (eState = {}));
+;
+/**
+ * These states will look different based on the input methods
+ * ex: maybe mouse will not ever enter zoom
+ */
 var Editor = new function () {
     let symbols = [];
+    this.inputType = InputType.Mouse;
+    this.state = eState.Idle;
+    this.target = null;
     this.x = 0;
     this.y = 0;
     this.w = 70;
     this.h = 70;
-    this.place = function (sym) {
-        if (sym.num_units > 1) {
-            sym.unit(2);
-            console.log(`Sym has ${sym.num_units} units`);
-        }
+    this.prev_client_x = 0;
+    this.prev_client_y = 0;
+    this.init = function () {
+        this.setInputType(InputType.Mouse);
+    };
+    this.place = function (sym, unitNum = 1) {
+        // Set unit number
+        console.log(unitNum);
+        sym.unit(unitNum);
+        console.log(`Sym has ${sym.num_units} units`);
         let svg = sym.export();
         svg.setAttribute('transform', `translate(35, 35)`);
         canvas.appendChild(svg);
         let boundingBox = svg.getBBox({ stroke: true, markers: true, clipped: true });
-        let x = Math.floor(boundingBox.x), y = Math.floor(boundingBox.y);
-        let w = Math.ceil(boundingBox.width), h = Math.ceil(boundingBox.height);
+        // let x = Math.floor(boundingBox.x), y = Math.floor(boundingBox.y);
+        // let w = Math.ceil(boundingBox.width), h = Math.ceil(boundingBox.height);
+        let x = parseFloat(boundingBox.x.toFixed(2)), y = parseFloat(boundingBox.y.toFixed(2));
+        let w = parseFloat(boundingBox.width.toFixed(2)), h = parseFloat(boundingBox.height.toFixed(2));
+        x -= 0.3;
+        y -= 0.3;
+        w += 0.3;
+        h += 0.3;
+        console.log(boundingBox);
         svg.setAttribute('width', `${w - x}`);
         svg.setAttribute('height', `${h - y}`);
         svg.setAttribute('viewBox', `${x} ${y} ${w} ${h}`);
@@ -50,5 +87,73 @@ var Editor = new function () {
     };
     this.pan = function (dx, dy) {
         this.setViewBox(this.x + dx, this.y + dy, this.w, this.h);
+    };
+    this.mMouseDown = function (e) {
+        this.target = e.target;
+        this.setState(eState.Down);
+        this.prev_client_x = e.clientX;
+        this.prev_client_y = e.clientY;
+    };
+    this.mMouseMove = function (e) {
+        if (this.state == eState.Idle)
+            return;
+        const ratiox = this.w / canvas.clientWidth, ratioy = (this.h) / canvas.clientHeight;
+        const ox = (e.clientX - this.prev_client_x) * ratiox;
+        const oy = (e.clientY - this.prev_client_y) * ratioy;
+        switch (this.state) {
+            case eState.Moving:
+                // if we are moving an element
+                this.moveUnit(this.target, ox, oy);
+                break;
+            case eState.Pan:
+                // if we are moving the entire canvas
+                this.pan(this.prev_client_x - e.clientX, this.prev_client_y - e.clientY);
+                break;
+            case eState.Down:
+                // if we are selecting the canvas, pan. if we are selecting an elem, move
+                this.setState(e.target == canvas ? eState.Pan : eState.Moving);
+        }
+        this.prev_client_x = e.clientX;
+        this.prev_client_y = e.clientY;
+    };
+    this.moveUnit = function (target, dx, dy) {
+        const curx = parseFloat((this.target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[0].slice(10));
+        const cury = parseFloat((this.target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[1].slice(0, -1));
+        target.parentElement.setAttribute('transform', `translate(${curx + dx}, ${cury + dy})`);
+    };
+    this.mMouseUp = function (e) {
+        const sym = Editor.searchSym(this.target.parentElement.id);
+        switch (this.state) {
+            case eState.Down:
+                if (sym)
+                    symbolDetails.show(sym);
+                else {
+                    symbolDetails.hide();
+                    console.log(`[Editor]: Symbol Not Found: ${this.target.parentElement.id}!!`);
+                }
+                break;
+        }
+        this.setState(eState.Idle);
+    };
+    this.setState = function (s) {
+        this.state = s;
+    };
+    this.setInputType = function (input) {
+        this.inputType = input;
+        switch (input) {
+            case InputType.Mouse:
+                canvas.addEventListener('mousedown', this.mMouseDown.bind(this));
+                canvas.addEventListener('mouseup', this.mMouseUp.bind(this));
+                canvas.addEventListener('mousemove', this.mMouseMove.bind(this));
+                canvas.addEventListener('wheel', (event) => {
+                    if (event.deltaY > 0) {
+                        Editor.zoomIn();
+                    }
+                    else {
+                        Editor.zoomOut();
+                    }
+                });
+                break;
+        }
     };
 };

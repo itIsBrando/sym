@@ -58,67 +58,26 @@
         <script>
             var canvas = document.getElementById('canvas');
 
-            canvas.addEventListener('wheel', (event) => {
-                if(event.deltaY > 0) {
-                    Editor.zoomIn();
-                } else {
-                    Editor.zoomOut();
-                }
-            });
-
-
             var state = 'none';
 
-            function onMouseDown(e) {
-                // console.log(e.target, e.target.parentElement);
-                const target = e.target;
-                const startx = parseInt((target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[0].slice(10));
-                const starty = parseInt((target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[1].slice(0, -1));
-                let mx = e.clientX;
-                let my = e.clientY;
+            // function onMouseDown(e) {
+            //     // console.log(e.target, e.target.parentElement);
+            //     const target = e.target;
+            //     const startx = parseInt((target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[0].slice(10));
+            //     const starty = parseInt((target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[1].slice(0, -1));
+            //     let mx = e.clientX;
+            //     let my = e.clientY;
 
-                if(e.target == canvas) {
-                    state = 'pan';
-                } else {
-                    state = 'down';
-                }
-
-                function onMouseMove(e) {
-                    if(state == 'pan') {
-                        Editor.pan(mx - e.clientX, my - e.clientY);
-                        mx = e.clientX, my = e.clientY;
-                    } else {
-                        target.parentElement.setAttribute('transform', `translate(${startx + e.clientX - mx}, ${starty +  e.clientY - my})`);
-                        state = 'move';
-                    }
-                }
-
-                function onMouseUp(e) {
-                    canvas.removeEventListener('mousemove', onMouseMove);
-                    canvas.removeEventListener('mouseup', onMouseUp);
-                    canvas.removeEventListener('mousecancel', onMouseUp);
-
-                    if(state == 'down') {
-                        console.log('pressed');
-                        const sym = Editor.searchSym(target.parentElement.id);
-                        if(sym)
-                            symbolDetails.show(sym);
-                        else
-                            console.log(`[Editor]: Symbol Not Found: ${target.parentElement.id}!!`);
-                    } else if(state == 'move') {
-                        console.log('move');
-                    }
-
-                    state = 'none';
-                }
-
-                canvas.addEventListener('mousemove', onMouseMove);
-                canvas.addEventListener('mouseup', onMouseUp);
-                canvas.addEventListener('mousecancel', onMouseUp);
-            }
+            //     if(e.target == canvas) {
+            //         state = 'pan';
+            //     } else {
+            //         state = 'down';
+            //     }
 
 
-            canvas.addEventListener('mousedown', onMouseDown);
+
+            // canvas.addEventListener('mousedown', onMouseDown);
+            Editor.init();
 
             Editor.place(tDef);
         </script>

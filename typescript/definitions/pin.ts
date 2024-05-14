@@ -11,6 +11,10 @@ class dPin extends Definition {
     numEffects: dEffects;
     parent: dSymbol;
 
+    /**
+     * @todo the position of the label of the pin should be
+     */
+
     constructor(tok: Tok, parent: dSymbol) {
         const nameObj = tok.key('name');
         const numObj = tok.key('number');
@@ -36,8 +40,12 @@ class dPin extends Definition {
         const xStart = this.position.x, yStart = this.position.y;
         const xEnd = this.position.x + this.length * this.position.rx();
         const yEnd = this.position.y + this.length * this.position.ry();
-        const name = this.parent.pin_name_hidden ? '' : this.nameEffects.text(this.name, (dPin.offset + this.position.rx() + xEnd), (dPin.offset + this.position.ry() + yEnd));
-        const num = this.parent.pin_num_hidden ? '' : '@TODO';
+        const xText = (dPin.offset * this.position.rx() + xEnd);
+        const yText = (dPin.offset * this.position.ry() + yEnd);
+        const xPin = this.position.x - dPin.offset;
+        const yPin = this.position.y - dPin.offset;
+        const name = this.parent.pin_name_hidden ? '' : this.nameEffects.text(this.name == '~' ? '': this.name, xText, yText, this.position.radians);
+        const num = this.parent.pin_num_hidden ? '' : this.numEffects.text(this.num, xPin, yPin);
 
         return `
             <polyline stroke="${Color.tPin}" points="${xStart} ${yStart} ${xEnd} ${yEnd}"

@@ -88,17 +88,23 @@ class dSymbol extends Definition {
         let out = '';
 
         for(let i = 0; i < this.defs.length; i++) {
+            let shouldAppend = true;
             // skip over shit if we are not the selected unit
             if(this.defs[i] instanceof dSymbol) {
                 const childSym = this.defs[i] as dSymbol;
+                const style = childSym.unit_id?.style ?? 1;
+
+                if(style != 1 && style != 0)
+                    shouldAppend = false;
 
                 if(childSym.unit_id.unit != 0 && this.selected_unit != childSym.unit_id!.unit) {
                     console.log("SKIPPED", childSym.unit_id, this.selected_unit);
-                    continue;
+                    shouldAppend = false;
                 }
             }
 
-            out += this.defs[i].graphic();
+            if(shouldAppend)
+                out += this.defs[i].graphic();
         }
 
         return out;
