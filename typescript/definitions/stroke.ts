@@ -18,14 +18,25 @@ class dStroke {
         }
     }
 
-    constructor(tok: Tok) {
-        const w = tok.key('width')!.params[0].asNum();
-        this.width = w;
-        if(this.width < 0)
-            this.width = 0; // TODO
-        this.type = tok.key('type')!.params[0].asStr();
-        this.color = Color.tStroke;
-        this.dash = this.strokeType();
+    constructor();
+    constructor(a: Tok);
+
+    constructor(a?: Tok) {
+        if(a === undefined) {
+            this.width = 0.0001; // @todo
+            this.type = 'default';
+            this.color = Color.tStroke;
+            this.dash = this.strokeType();
+        } else {
+            const tok = a as Tok;
+            const w = tok.key('width')!.params[0].asNum();
+            this.width = w;
+            if(this.width < 0)
+                this.width = 0; // TODO
+            this.type = tok.key('type')!.params[0].asStr();
+            this.color = Color.tStroke; // @todo
+            this.dash = this.strokeType();
+        }
     }
 
     /**

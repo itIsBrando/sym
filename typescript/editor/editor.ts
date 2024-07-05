@@ -1,10 +1,5 @@
 var canvas = document.getElementById('canvas');
-
-
-enum InputType {
-    Mouse,
-    Pencil,
-};
+let bottomBar = document.getElementById('bottomBar');
 
 
 enum eState {
@@ -17,6 +12,14 @@ enum eState {
     Moving,     // this state is to represent any sort of dragging of an element whereas panning only refers to moving the canvas
 };
 
+enum eTool { // these tools correspond to the items on the toolbar
+    None,       // no tool selected. clicking on a symbol will bring up details on it.
+    Wiring,     // placing wire
+    Label,      // placing local label
+    GlobalLabel,// placing global label
+    Delete,     // removing components
+}
+
 /**
  * These states will look different based on the input methods
  * ex: maybe mouse will not ever enter zoom
@@ -27,22 +30,25 @@ var Editor = new function() {
     let symbols: dSymbol[] = [];
     this.inputType = InputType.Mouse;
     this.state = eState.Idle;
+    this.control = new Control();
+    this.tool = eTool.None;
     this.target = null;
     this.x = 0;
     this.y = 0;
     this.w = 70;
     this.h = 70;
+    this.scale = 1;
     this.cur_touches = [];
-
-    this.prev_client_x = 0;
-    this.prev_client_y = 0;
-
-    this.hasTouch = function(): boolean {
-        return 'ontouchstart' in window;
-    }
+    this.toolElems = {
+        [eTool.None]: null,
+        [eTool.Wiring]: document.getElementById('toolbarWire'),
+        [eTool.Label]: document.getElementById('toolbarLabel'),
+        [eTool.GlobalLabel]: document.getElementById('toolbarGLabel'),
+        [eTool.Delete]: document.getElementById('toolbarDelete'),
+    };
 
     this.init = function() {
-        this.setInputType(this.hasTouch() ? InputType.Pencil : InputType.Mouse);
+
     }
 
     this.place = function(sym: dSymbol, unitNum: number = 1) {
@@ -86,7 +92,7 @@ var Editor = new function() {
         return null;
     }
 
-    this.setViewBox = function(x, y, w, h) {
+    this.setViewBox = function(x: number, y: number, w: number, h: number) {
         this.x = x, this.y = y;
         this.w = w, this.h = h;
         canvas.setAttribute('viewBox', `${x} ${y} ${w} ${h}`);
@@ -94,54 +100,49 @@ var Editor = new function() {
 
     this.zoomIn = function() {
         const d = 1.1;
-
-        this.setViewBox(this.x * d, this.y * d, this.w * d, this.h * d);
+        this.scale *= d;
+        this.setViewBox(this.x, this.y, this.w * d, this.h * d);
+        this.setBottomBar();
     }
 
     this.zoomOut = function() {
         const d = 0.9;
-        this.setViewBox(this.x * d, this.y * d, this.w * d, this.h * d);
+        this.scale *= d;
+        this.setViewBox(this.x, this.y, this.w * d, this.h * d);
+        this.setBottomBar();
     }
 
     this.pan = function(dx: number, dy: number) {
-        this.setViewBox(this.x + dx, this.y + dy, this.w, this.h);
+        this.setViewBox(this.x + dx * this.scale, this.y + dy * this.scale, this.w, this.h);
+        this.setBottomBar();
     }
 
-    this.mMouseDown = function(e: MouseEvent) {
-        this.target = e.target;
-        this.setState(eState.Down);
-        this.prev_client_x = e.clientX;
-        this.prev_client_y = e.clientY;
-    }
+    /**
+     * Action click. Occurs when the canvas is clicked or tapped
+     */
+    this.aClick = function() {
+        const sym = Editor.searchSym(Editor.target.parentElement.id);
+        symbolDetails.hide();
 
-    this.mMouseMove = function(e: MouseEvent) {
-        if(this.state == eState.Idle)
-            return;
-
-        const ox = (e.clientX - this.prev_client_x);
-        const oy = (e.clientY - this.prev_client_y);
-
-
-        switch(this.state) {
-            case eState.Moving:
-                // if we are moving an element
-                this.moveUnit(this.target, ox, oy);
+        switch(this.tool) {
+            case eTool.None:
+                if(sym)
+                    symbolDetails.show(sym);
+                else {
+                    console.log(`[Editor]: Symbol Not Found: ${Editor.target.parentElement.id}!!`);
+                }
                 break;
-            case eState.Pan:
-                // if we are moving the entire canvas
-                this.pan(this.prev_client_x - e.clientX, this.prev_client_y - e.clientY);
+            case eTool.Wiring:
+                console.log('Wiring');
                 break;
-            case eState.Down:
-                // if we are selecting the canvas, pan. if we are selecting an elem, move
-                this.setState(e.target == canvas ? eState.Pan : eState.Moving);
         }
-
-        this.prev_client_x = e.clientX;
-        this.prev_client_y = e.clientY;
     }
 
-    // why the hell does this not work on safari >:(
-    // nothing works on safari and it makes no sense. goshdang issue with transform ig
+
+    /* why the hell does this not work on safari >:(
+     * @todo
+     * nothing works on safari and it makes no sense. goshdang issue with transform ig
+     */
     this.moveUnit = function(target: any, dx: number, dy: number) {
         const ratiox = this.w / canvas.clientWidth, ratioy = (this.h) / canvas.clientHeight;
         const curx = parseFloat((target.parentElement.getAttribute('transform') || "translate(0,0)").split(',')[0].slice(10));
@@ -151,107 +152,11 @@ var Editor = new function() {
     }
 
 
-    this.mMouseUp = function(e: MouseEvent) {
-        const sym = Editor.searchSym(this.target.parentElement.id);
-
-        switch(this.state) {
-            case eState.Down:
-                if(sym)
-                    symbolDetails.show(sym);
-                else {
-                    symbolDetails.hide();
-                    console.log(`[Editor]: Symbol Not Found: ${this.target.parentElement.id}!!`);
-                }
-                break;
-        }
-
-        this.setState(eState.Idle);
-    }
-
-    this.pTouchStart = function(e: TouchEvent) {
-        e.preventDefault();
-        const touches = e.changedTouches;
-
-        for(let i = 0; i < touches.length; i++) {
-            this.cur_touches.push(touches[i]);
-
-            if((touches[i] as any).touchType == 'stylus') {
-                this.state = eState.Down;
-                this.target = e.target;
-            }
-        }
-    }
-
-
-    this.pTouchMove = function(e: TouchEvent) {
-        e.preventDefault();
-        const touches = e.changedTouches;
-
-        for(let i = 0; i < touches.length; i++) {
-            const t: any = touches[i];
-            const idx = this.pGetTouchById(t.identifier);
-            const prevT = this.cur_touches[idx];
-
-            if(t.touchType == 'stylus') {
-                switch(this.state) {
-                    case eState.Down:
-                        this.state = eState.Moving;
-                    case eState.Moving:
-                        this.moveUnit(this.target, 4, 4);
-                        // this.moveUnit(this.target, prevT.clientX - t.clientX, prevT.clientY - t.clientY);
-                        console.log('Hello?', this.target.parentElement);
-                        break;
-                }
-            } else {
-                switch(this.state) {
-                    case eState.Idle:
-                        this.state = eState.Pan;
-                        break;
-                    case eState.Pan:
-                        this.pan(prevT.clientX - t.clientX, prevT.clientY - t.clientY);
-                        break;
-                }
-            }
-
-            this.cur_touches[idx] = this.pCopyTouch(t);
-            console.log(this.state, this.target);
-        }
-    }
-
-    this.pTouchEnd = function(e: TouchEvent) {
-        e.preventDefault();
-        const touches = e.changedTouches;
-        const sym = Editor.searchSym(this.target?.parentElement.id ?? null);
-
-        switch(this.state) {
-            case eState.Down:
-                if(sym)
-                    symbolDetails.show(sym);
-                else {
-                    symbolDetails.hide();
-                    console.log(`[Editor]: Symbol Not Found: ${this.target.parentElement.id}!!`);
-                }
-                break;
-        }
-
-        for(let i = 0; i < touches.length; i++) {
-            const idx = this.pGetTouchById(touches[i].identifier);
-            this.cur_touches.splice(idx, 1);
-        }
-
-        this.setState(eState.Idle);
-    }
-
-    this.pCopyTouch = function({identifier, touchType, clientX, clientY}) {
-        return {identifier, touchType, clientX, clientY};
-    }
-
-    this.pGetTouchById = function(id: String): number {
-        for(let i = 0; i < this.cur_touches.length; i++)
-            if(this.cur_touches[i].identifier == id)
-                return i;
-
-        return -1;
+    /**
+     * Updates the text at the bottom of the screen
+     */
+    this.setBottomBar = function() {
+        bottomBar.innerHTML = `x: ${this.x.toFixed(2)} y: ${this.y.toFixed(2)}`;
     }
 
 
@@ -259,30 +164,33 @@ var Editor = new function() {
         this.state = s;
     }
 
+    this.setTool = function(t: eTool) {
+        // update the toolbar's GUI
+        for(const key of Object.keys(this.toolElems)) {
+            if(this.toolElems[key] == null)
+                continue;
+            else if(t == (Number(key) as eTool)) {
+                this.toolElems[key].classList.add('btn-default-active');
+            } else {
+                this.toolElems[key].classList.remove('btn-default-active');
+            }
+        }
+
+        this.tool = t;
+    }
+
+    this.toggleTool = function(t: eTool) {
+        if(this.tool == t) {
+            this.setTool(eTool.None);
+        } else {
+            this.setTool(t);
+        }
+    }
+
 
     this.setInputType = function(input: InputType) {
         this.inputType = input;
 
-        switch(input) {
-            case InputType.Mouse:
-                canvas.addEventListener('mousedown', this.mMouseDown.bind(this));
-                canvas.addEventListener('mouseup', this.mMouseUp.bind(this));
-                canvas.addEventListener('mousecancel', this.mMouseUp.bind(this));
-                canvas.addEventListener('mousemove', this.mMouseMove.bind(this));
-                canvas.addEventListener('wheel', (event) => {
-                    if(event.deltaY > 0) {
-                        Editor.zoomIn();
-                    } else {
-                        Editor.zoomOut();
-                    }
-                });
-                break;
-            case InputType.Pencil:
-                canvas.addEventListener('touchstart', this.pTouchStart.bind(this));
-                canvas.addEventListener('touchmove', this.pTouchMove.bind(this));
-                canvas.addEventListener('touchend', this.pTouchEnd.bind(this));
-                canvas.addEventListener('touchcancel', this.pTouchEnd.bind(this));
-                break;
-        }
+        this.control.setInputType(input);
     }
 }

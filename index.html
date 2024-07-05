@@ -30,17 +30,24 @@
             </div>
         </div>
 
+        <div class="bottom-bar" id="bottomBar">
+            Editing
+        </div>
+
         <div class="toolbar">
             <button type="button" class="btn-default" onclick="CatalogList.show();">place</button>
-            <button type="button" class="btn-default">wire</button>
-            <button type="button" class="btn-default">connector</button>
-            <button type="button" class="btn-default">delete</button>
+            <button type="button" class="btn-default" id="toolbarWire" onclick="Editor.toggleTool(eTool.Wiring)">wire</button>
+            <button type="button" class="btn-default" id="toolbarLabel" onclick="Editor.toggleTool(eTool.Label)">label</button>
+            <button type="button" class="btn-default" id="toolbarGLabel" onclick="Editor.toggleTool(eTool.GlobalLabel)">gbl label</button>
+            <button type="button" class="btn-default" id="toolbarDelete" onclick="Editor.toggleTool(eTool.Delete)">delete</button>
+
         </div>
 
         <script src="javascript/ui/symbolDetail.js"></script>
         <script src="javascript/ui/catalog.js"></script>
         <script src="javascript/definition.js"></script>
         <script src="javascript/library.js"></script>
+        <script src="javascript/editor/input.js"></script>
         <script src="javascript/editor/editor.js"></script>
         <script src="javascript/definitions/symbol.js"></script>
         <script src="javascript/definitions/fill.js"></script>
@@ -53,6 +60,7 @@
         <script src="javascript/definitions/pin.js"></script>
         <script src="javascript/definitions/polyline.js"></script>
         <script src="javascript/definitions/property.js"></script>
+        <script src="javascript/definitions/wire.js"></script>
         <script src="javascript/parameter.js"></script>
         <script src="javascript/parser.js"></script>
         <script>

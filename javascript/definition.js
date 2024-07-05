@@ -31,6 +31,16 @@ class Coordinate {
         return new Coordinate(tok.params[0].asNum(), tok.params[1].asNum());
     }
     /**
+     * @returns a space delimited string of all the coordinates (ready for SVG parameters)
+     */
+    static listToString(pointsList) {
+        let points = ``;
+        for (let i = 0; i < pointsList.length; i++) {
+            points += `${pointsList[i].x} ${pointsList[i].y} `;
+        }
+        return points;
+    }
+    /**
      * Accepts a 'pts' tok
      */
     static list(tok) {

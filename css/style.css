@@ -12,6 +12,7 @@ html, body {
     padding: 0;
     width: 100%;
     height: 100%;
+    overflow: hidden;
 }
 
 a:link {
@@ -82,6 +83,16 @@ a:link {
     opacity: 0.8;
 }
 
+.bottom-bar {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 1.5em;
+    padding: 0.5em 1.5em;
+    background: var(--ui-background);
+    color: var(--ui-text-color);
+    border-top: 1px solid var(--ui-text-color);
+}
 
 .toolbar {
     display: flex;
@@ -96,14 +107,19 @@ a:link {
     box-shadow: 2px 2px 5px black;
 }
 
-.btn-default {
+.btn-default, .btn-default-active {
     cursor: pointer;
     color: var(--ui-accent);
     background-color: transparent;
     border: none;
     margin: 0;
     padding: 0.5rem;
+    border-radius: 0.4rem;
 
+}
+
+.btn-default-active {
+    background-color: var(--ui-background-highlight);
 }
 
 .btn-default:hover {

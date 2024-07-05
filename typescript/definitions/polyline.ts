@@ -11,11 +11,7 @@ class dPolyline extends Definition {
     }
 
     graphic(): string {
-        let points = ``;
-
-        for(let i = 0; i < this.points.length; i++) {
-            points += `${this.points[i].x} ${this.points[i].y} `;
-        }
+        const points = Coordinate.listToString(this.points);
 
         return `<polyline ${this.fill.fill()} ${this.stroke.stroke()}
         stroke-linejoin="round" stroke-linecap="round"

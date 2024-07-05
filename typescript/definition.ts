@@ -13,11 +13,11 @@ class Coordinate {
         return `(${this.x}, ${this.y})`;
     }
 
-    rx() {
+    rx(): number {
         return Math.cos(this.radians);
     }
 
-    ry() {
+    ry(): number {
         return -Math.sin(this.radians);
     }
 
@@ -40,6 +40,19 @@ class Coordinate {
      */
     static point(tok: Tok) {
         return new Coordinate(tok.params[0].asNum(), tok.params[1].asNum());
+    }
+
+    /**
+     * @returns a space delimited string of all the coordinates (ready for SVG parameters)
+     */
+    static listToString(pointsList: Coordinate[]): string {
+        let points = ``;
+
+        for(let i = 0; i < pointsList.length; i++) {
+            points += `${pointsList[i].x} ${pointsList[i].y} `;
+        }
+
+        return points;
     }
 
     /**

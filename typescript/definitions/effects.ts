@@ -31,7 +31,7 @@ class dEffects extends Definition {
         // @todo thickness, bold, italic
         if(this.hidden) return '';
         return `
-            <text transform="translate(${x} ${y}) ${rotate != 0 ? 'rotate(90)' : ''}" font-size="${this.height}">${text}</text>
+            <text font-family="Century Gothic, CenturyGothic, sans-serif"  transform="translate(${x} ${y}) ${rotate != 0 ? 'rotate(90)' : ''}" font-size="${this.height}">${text}</text>
         `;
     }
 }
